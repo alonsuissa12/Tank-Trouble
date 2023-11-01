@@ -58,6 +58,7 @@ class MapGenerator:
             start, end = wall_coords
             wall = Wall(start, end, width=self.wall_width)
             self.walls.append(wall)
+        return self.walls
 
     def draw_map(self):
         for wall in self.walls:

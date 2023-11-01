@@ -1,29 +1,40 @@
+import math
+
 import pygame
 import random
 from pygame import Vector2
 
-Tank_length = 50
-Tank_width = 30
+
+class BoostManager:
+    def __init__(self):
+        pass
+
+
+Tank_length = 55
+Tank_width = 31
 base_speed = 5
 
 
 class Tank(object):
-    def __init__(self, x: int, y: int, pic_name, pivot):
-        self.x = x
-        self.y = y
+    def __init__(self, pic_name, pivot):
+
         self.ammunition = 4
         self.life = 1
         self.bullets = []
-        self.angel = 0
+        self.angel = 0  # note: angel 0 is upward!
+        self.regular_angel = (self.angel + 90) % 360
         self.pivot = pivot
         self.offset = Vector2()
         self.offset.from_polar((0, self.angel))
         self.pos = pivot + self.offset
         self.orig_pic = pygame.image.load(pic_name).convert_alpha()
         self.pic = self.orig_pic
-
+        self.BM = BoostManager()
         self.rect = self.pic.get_rect(center=self.pos)
         self.center = self.rect.center
+
+        # self.right_dot_offset = Vector2()
+        # self.offset.from_polar(((Tank_width + 1) / 2, self.angel))
 
     def shoot(self):
         if self.ammunition > 0:
@@ -32,10 +43,29 @@ class Tank(object):
 
     def show(self, screen):
         screen.blit(self.pic, self.rect)
+        print("offset =", self.offset)
+        print("center =", self.center)
+        print("pivot =", self.pivot)
+        pygame.draw.circle(screen, (200, 200, 100), self.center, 5.0, 10)
+        pygame.draw.circle(screen, (200, 200, 100), (self.center[0] + Tank_width / 2, self.center[1]), 3.0, 3)
+        # pygame.draw.circle(screen, (200, 200, 100), (self.center[0] - Tank_width / 2, self.center[1]), 3.0, 3)
 
-    def update(self, dt):
-        self.angel += 5 * dt
-        self.pic, self.rect = self.rotate(self.orig_pic, self.angel, self.pivot, self.pos)
+    def update(self, dt, move_speed):
+        # rotate
+        if dt != 0:
+            rotate_speed = 5
+            self.angel += rotate_speed * dt
+            self.angel = self.angel % 360
+            self.regular_angel = (self.angel + 90) % 360
+            self.pic, self.rect = self.rotate(self.orig_pic, self.angel, self.pivot, self.pos)
+
+        # move
+        if move_speed != 0:
+            x, y = self.move(move_speed)
+            self.center = (self.center[0] + x, self.center[1] - y)
+            self.rect.center = self.center
+            self.pivot = self.center
+            self.pos = self.pivot + self.offset
 
     def rotate(self, image, angel, pivot, origin):
         surf = pygame.transform.rotate(image, angel)
@@ -43,24 +73,13 @@ class Tank(object):
         offset = pivot + (origin - pivot).rotate(-angel)
         rect = surf.get_rect(center=offset)
 
+        # self.right_dot_offset = pivot + (origin - pivot).rotate(-angel)
+
         return surf, rect
 
-        # pivot = self.center
-        # rotate_pic = pygame.transform.rotate(self.pic, angel)
-        # offset = pivot + (self.origin - pivot).rotate(-angel)
-        # rect = rotate_pic.get_rect(center=offset)
-        # self.rect = rect
-        # self.pic = pic
-        # self.center = self.rect.center
-        # self.x = rect.x
-        # self.y = rect.y
-        # self.angel += angel
-
-        # body_s = pygame.Surface((Tank_w, Tank_h))
-        # body_s = pygame.transform.rotate(body_s, rotate_amount)
-        # barrel_s = pygame.Surface(self.barrel.size)
-        # barrel_s = pygame.transform.rotate(barrel_s, rotate_amount)
-
-        # self.body = body_s.get_rect(center=self.body.center)
-        # self.barrel = barrel_s.get_rect(center=self.barrel.center)
-        # self.barrel.center = (self.body.centerx, self.body.top)  # middle of the top
+    def move(self, speed):
+        # Todo: check for boost and add to speed
+        radian_angel = math.radians(self.regular_angel)
+        x = Tank_length * math.cos(radian_angel) * speed
+        y = Tank_length * math.sin(radian_angel) * speed
+        return x, y

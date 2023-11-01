@@ -15,10 +15,13 @@ background_color = (233, 233, 233)
 toolbar_color = (143, 200, 90)
 
 map_generator = MapGenerator(screen, screen_w, screen_h - 100)
-map_generator.generate_map()
-yy = 110
-xx = 110
-tank1 = Tank(xx, yy, 'red tank.png', (xx, yy))
+walls = map_generator.generate_map()
+red_start_y = 600
+red_start_x = 1200
+blue_start_y = 110
+blue_start_x = 110
+red_tank = Tank('red tank.png', (red_start_x, red_start_y))
+blue_tank = Tank('blue tank.png', (blue_start_x, blue_start_y))
 
 
 def game_loop():
@@ -26,29 +29,51 @@ def game_loop():
     game_run = True
     game_playing = True
     is_text = True
-    rotate_angel = 0
+    rotate_angel_red = 0
+    move_speed_red = 0
+    rotate_angel_blue = 0
+    move_speed_blue = 0
     while game_run:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 game_run = False
-            # if pygame.mouse.get_pressed():
-            #     print(pygame.mouse.get_pos())
+
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_RIGHT:
-                    rotate_angel = -1
-
+                    rotate_angel_red = -1
                 if event.key == pygame.K_LEFT:
-                    rotate_angel = 1
+                    rotate_angel_red = 1
+                if event.key == pygame.K_UP:
+                    move_speed_red = 0.1
+                if event.key == pygame.K_DOWN:
+                    move_speed_red = -0.1
+                if event.key == pygame.K_d:
+                    rotate_angel_blue = -1
+                if event.key == pygame.K_a:
+                    rotate_angel_blue = 1
+                if event.key == pygame.K_w:
+                    move_speed_blue = 0.1
+                if event.key == pygame.K_s:
+                    move_speed_blue = -0.1
+
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_RIGHT or event.key == pygame.K_LEFT:
-                    rotate_angel = 0
-        tank1.update(rotate_angel)
+                    rotate_angel_red = 0
+                if event.key == pygame.K_UP or event.key == pygame.K_DOWN:
+                    move_speed_red = 0
+                if event.key == pygame.K_d or event.key == pygame.K_a:
+                    rotate_angel_blue = 0
+                if event.key == pygame.K_w or event.key == pygame.K_s:
+                    move_speed_blue = 0
+
+        red_tank.update(rotate_angel_red, move_speed_red)
+        blue_tank.update(rotate_angel_blue,move_speed_blue)
         screen.fill(background_color)
         map_generator.draw_map()
         pygame.draw.rect(screen, toolbar_color, pygame.Rect(0, 0, screen_w, 50))  # Draw toolbar
 
-        tank1.show(screen)
-
+        red_tank.show(screen)
+        blue_tank.show(screen)
 
         pygame.display.update()
         clock.tick(fps)
